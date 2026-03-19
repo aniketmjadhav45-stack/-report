@@ -30,11 +30,23 @@ export const FilterBar = ({ filters, setFilters, data }: { filters: Filters; set
 
   return (
     <div className="bg-white border-b border-[#dadce0] sticky top-0 z-10 px-8 py-3 flex flex-wrap items-center gap-3 shadow-sm">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded border border-[#dadce0] hover:border-[#70757a] cursor-pointer transition-colors">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded border border-[#dadce0] hover:border-[#70757a] transition-colors">
         <Calendar className="w-3.5 h-3.5 text-[#5f6368]" />
-        <span className="text-[12px] text-[#3c4043]">
-          {format(filters.dateRange.start, 'MMM d')} - {format(filters.dateRange.end, 'MMM d, yyyy')}
-        </span>
+        <div className="flex items-center gap-1">
+          <input 
+            type="date" 
+            className="text-[11px] outline-none bg-transparent"
+            value={format(filters.dateRange.start, 'yyyy-MM-dd')}
+            onChange={(e) => handleChange('dateRange', { ...filters.dateRange, start: new Date(e.target.value) })}
+          />
+          <span className="text-[11px] text-[#70757a]">-</span>
+          <input 
+            type="date" 
+            className="text-[11px] outline-none bg-transparent"
+            value={format(filters.dateRange.end, 'yyyy-MM-dd')}
+            onChange={(e) => handleChange('dateRange', { ...filters.dateRange, end: new Date(e.target.value) })}
+          />
+        </div>
       </div>
 
       <select 

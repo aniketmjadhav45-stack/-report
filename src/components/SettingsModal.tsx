@@ -11,10 +11,32 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, sheetUrl, onSave }) => {
   const [url, setUrl] = useState(sheetUrl);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateUrl = (inputUrl: string) => {
+    if (!inputUrl) return true;
+    
+    // Check if it's a standard Google Sheet link instead of a CSV export
+    if (inputUrl.includes('docs.google.com/spreadsheets') && !inputUrl.includes('export?format=csv') && !inputUrl.includes('pub?output=csv')) {
+      setError("This looks like a standard Google Sheet link. Please use the 'Publish to web' CSV link instead.");
+      return false;
+    }
+
+    try {
+      new URL(inputUrl);
+      setError(null);
+      return true;
+    } catch (e) {
+      setError("Please enter a valid URL.");
+      return false;
+    }
+  };
 
   const handleSave = () => {
-    onSave(url);
-    onClose();
+    if (validateUrl(url)) {
+      onSave(url);
+      onClose();
+    }
   };
 
   return (
@@ -43,23 +65,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                 <input
                   type="text"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none transition-all text-sm ${
+                    error ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
+                  }`}
                 />
-                <p className="text-xs text-gray-500">
-                  To get this URL: File &gt; Share &gt; Publish to web &gt; Choose 'CSV' &gt; Copy the link.
-                </p>
+                {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+                
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">How to get the correct link:</p>
+                  <ol className="text-xs text-gray-600 space-y-2 list-decimal pl-4">
+                    <li>Open your Google Sheet.</li>
+                    <li>Go to <strong>File</strong> &gt; <strong>Share</strong> &gt; <strong>Publish to web</strong>.</li>
+                    <li>Select <strong>Entire Document</strong> (or a specific sheet) and <strong>Comma-separated values (.csv)</strong>.</li>
+                    <li>Click <strong>Publish</strong> and copy the generated link.</li>
+                  </ol>
+                </div>
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <div className="flex gap-3">
                   <ExternalLink className="w-5 h-5 text-blue-600 shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-blue-900">How to connect your data</p>
+                    <p className="text-sm font-medium text-blue-900">Why use a proxy?</p>
                     <p className="text-xs text-blue-700 leading-relaxed">
-                      Paste your Google Sheet CSV export URL above to sync your dashboard with real-time data. 
-                      The dashboard will automatically refresh every 5 minutes.
+                      We've implemented a server-side proxy to bypass common connection issues (CORS). 
+                      This ensures your dashboard stays connected even when browsers try to block the direct link.
                     </p>
                   </div>
                 </div>

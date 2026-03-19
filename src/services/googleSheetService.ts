@@ -3,7 +3,15 @@ import { Transaction } from '../data/transactions';
 
 export const fetchGoogleSheetData = async (url: string): Promise<Transaction[]> => {
   try {
-    const response = await fetch(url);
+    // Use server-side proxy to bypass CORS
+    const proxyUrl = `/api/proxy-sheet?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || 'Failed to fetch via proxy');
+    }
+
     const csvText = await response.text();
     
     return new Promise((resolve, reject) => {

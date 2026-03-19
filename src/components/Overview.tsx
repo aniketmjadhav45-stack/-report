@@ -132,7 +132,7 @@ export const Overview = ({ data, lastAddedRows = [] }: { data: Transaction[], la
       {/* Page Header / Instruction */}
       <div className="border-l-4 border-[#00A99D] pl-4 py-2 bg-[#f8f9fa]">
         <p className="text-[12px] italic text-[#5f6368]">
-          "I want a single-page summary that tells me at a glance: how much we sold, which products drove revenue, and NEW vs UPGRADE split, with interactive filters."
+          "I want a single-page summary that tells me at a glance: how much we sold, which products drove revenue, and NEW vs UPGRADE split."
         </p>
       </div>
 

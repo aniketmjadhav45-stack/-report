@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Transaction } from '../data/transactions';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency, exportToCSV } from '../lib/utils';
 import { Table, Database, Search, Download, Filter } from 'lucide-react';
 
 export const GoogleSheetView = ({ data }: { data: Transaction[] }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return data;
+    const lowerSearch = searchTerm.toLowerCase();
+    return data.filter(t => 
+      Object.values(t).some(val => 
+        String(val).toLowerCase().includes(lowerSearch)
+      )
+    );
+  }, [data, searchTerm]);
+
+  const handleExport = () => {
+    exportToCSV(filteredData, `neotrader_sales_data_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
   return (
     <div className="flex flex-col gap-6 bg-white p-6">
       {/* Page Header / Instruction */}
@@ -20,7 +36,7 @@ export const GoogleSheetView = ({ data }: { data: Transaction[] }) => {
           </div>
           <div>
             <h2 className="text-lg font-bold text-[#3c4043]">Raw Google Sheet Data</h2>
-            <p className="text-xs text-[#70757a]">Showing {data.length} total records from the source</p>
+            <p className="text-xs text-[#70757a]">Showing {filteredData.length} of {data.length} total records</p>
           </div>
         </div>
         
@@ -30,14 +46,15 @@ export const GoogleSheetView = ({ data }: { data: Transaction[] }) => {
             <input 
               type="text" 
               placeholder="Search data..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-1.5 text-xs border border-[#dadce0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#00A99D] w-64"
             />
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#3c4043] border border-[#dadce0] rounded-md hover:bg-[#f8f9fa]">
-            <Filter className="w-3.5 h-3.5" />
-            Filter
-          </button>
-          <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#00A99D] text-white rounded-md hover:bg-[#00796B]">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#00A99D] text-white rounded-md hover:bg-[#00796B]"
+          >
             <Download className="w-3.5 h-3.5" />
             Export CSV
           </button>
@@ -69,7 +86,7 @@ export const GoogleSheetView = ({ data }: { data: Transaction[] }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#efefef]">
-            {data.map((t, i) => (
+            {filteredData.map((t, i) => (
               <tr key={t.id || i} className="hover:bg-[#f1f3f4] transition-colors text-[11px] text-[#3c4043]">
                 <td className="p-3 border-r border-[#efefef] font-mono whitespace-nowrap">{t.date}</td>
                 <td className="p-3 border-r border-[#efefef] font-bold whitespace-nowrap">{t.clientName}</td>
@@ -108,7 +125,7 @@ export const GoogleSheetView = ({ data }: { data: Transaction[] }) => {
       </div>
       
       <div className="flex items-center justify-between text-[11px] text-[#70757a] mt-4">
-        <p>Showing {data.length} records</p>
+        <p>Showing {filteredData.length} records</p>
         <div className="flex items-center gap-4">
           <p>Source: Google Sheets CSV Export</p>
           <p>Last Sync: {new Date().toLocaleTimeString()}</p>

@@ -13,7 +13,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { Filters, getFilteredData } from './services/dataService';
 import { motion, AnimatePresence } from 'motion/react';
 import { Share2, Edit3, MoreVertical, RefreshCw, Download, Bell, Settings } from 'lucide-react';
-import { cn } from './lib/utils';
+import { cn, exportToCSV } from './lib/utils';
 import { fetchGoogleSheetData } from './services/googleSheetService';
 import { rawData as initialData, Transaction } from './data/transactions';
 
@@ -70,9 +70,9 @@ export default function App() {
         
         setData(newData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Refresh failed:', error);
-      if (!isAuto) showToast('Failed to refresh data', 'info');
+      if (!isAuto) showToast(error.message || 'Failed to refresh data', 'info');
     } finally {
       setIsRefreshing(false);
     }
@@ -102,9 +102,9 @@ export default function App() {
     refreshData(false);
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    showToast('Link copied to clipboard!');
+  const handleExport = () => {
+    exportToCSV(filteredData, `neotrader_sales_report_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`);
+    showToast('Exporting CSV...', 'success');
   };
 
   const handleEdit = () => {
@@ -120,7 +120,7 @@ export default function App() {
       case 'clients': return <Clients data={filteredData} />;
       case 'payments': return <Payments data={filteredData} />;
       case 'geography': return <Geography data={filteredData} />;
-      case 'google-sheet': return <GoogleSheetView data={data} />;
+      case 'google-sheet': return <GoogleSheetView data={filteredData} />;
       default: return <Overview data={filteredData} lastAddedRows={lastAddedRows} />;
     }
   };
@@ -188,11 +188,11 @@ export default function App() {
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
           <button 
-            onClick={handleShare}
+            onClick={handleExport}
             className="flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-[#3c4043] hover:bg-[#f8f9fa] rounded border border-[#dadce0]"
           >
-            <Share2 className="w-3.5 h-3.5" />
-            Share
+            <Download className="w-3.5 h-3.5" />
+            Download
           </button>
           <button 
             onClick={handleEdit}
@@ -209,8 +209,6 @@ export default function App() {
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         
         <main className="flex-1 ml-60 min-h-screen flex flex-col overflow-x-hidden">
-          <FilterBar filters={filters} setFilters={setFilters} data={data} />
-          
           <div className="p-4 md:p-6 w-full max-w-[1400px] mx-auto">
             <div className="bg-white shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)] min-h-[1200px] p-6 md:p-10 relative overflow-hidden">
               {/* Report Header */}
